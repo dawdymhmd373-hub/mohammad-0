@@ -3,51 +3,367 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mohammad 0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mohammad 0 | سامانه آموزشی</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
-body{
-margin:0;
-font-family:Tahoma,sans-serif;
-background:#10121b;
-color:#fff;
-}
-header{
-padding:35px 20px;
-background:linear-gradient(135deg,#171c35,#30204b);
-text-align:center;
-}
-h1{font-size:38px;margin:10px}
-header p{color:#c4c4d8}
-main{max-width:900px;margin:35px auto;padding:20px}
-.card{
-background:#1c2030;
-padding:25px;
-border-radius:18px;
-margin-bottom:20px;
-border:1px solid #34394e;
-}
-h2{color:#b99cff}
-footer{text-align:center;padding:30px;color:#999}
+body{margin:0;background:#0d1220;color:#f5f5fa;font-family:Tahoma,sans-serif}
+button,input,select,textarea{font:inherit}
+header{background:linear-gradient(120deg,#202c50,#482e68);padding:24px;text-align:center}
+header h1{margin:5px;font-size:29px}
+header p{color:#d1d5ed}
+.container{max-width:1100px;margin:30px auto;padding:15px}
+.card{background:#192237;border:1px solid #303c58;border-radius:17px;padding:22px;margin-bottom:18px}
+h2{color:#c2a5ff;margin-top:0}
+input,select,textarea{width:100%;padding:13px;margin:7px 0;background:#10192b;color:white;border:1px solid #394663;border-radius:9px}
+button{background:#7955d9;color:white;border:0;padding:12px 18px;border-radius:9px;cursor:pointer;margin:5px}
+button:hover{opacity:.85}
+.danger{background:#b83e53}
+.secondary{background:#34435f}
+.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:13px}
+.stat{background:#222e49;padding:20px;border-radius:13px;text-align:center}
+.stat strong{font-size:25px;display:block;color:#c2a5ff;margin-top:10px}
+.nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px}
+.nav button{flex:1;min-width:100px}
+.item{padding:13px;border-bottom:1px solid #35405a;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item span{overflow-wrap:anywhere}
+small{color:#aab3ca}
+footer{text-align:center;color:#8790a8;padding:25px}
+#message{padding:12px;border-radius:8px;margin:10px 0}
+@media(max-width:600px){.card{padding:16px}.item{flex-wrap:wrap}}
 </style>
 </head>
+
 <body>
+
 <header>
 <h1>Mohammad 0</h1>
-<p>کتابخانه دیجیتال و فضای اشتراک فایل</p>
+<p>سامانه مدیریت و آموزش دانشگاهی</p>
 </header>
-<main>
-<section class="card">
-<h2>خوش آمدید</h2>
-<p>به وب‌سایت Mohammad 0 خوش آمدید.</p>
-<p>اینجا می‌توانید مطالب آموزشی و فایل‌های کاربردی را پیدا کنید.</p>
+
+<div class="container">
+
+<section id="login" class="card">
+<h2>ورود مدیر</h2>
+<p>برای ورود به پنل مدیریت، اطلاعات حساب خود را وارد کنید.</p>
+<input id="email" type="email" placeholder="ایمیل مدیر">
+<input id="password" type="password" placeholder="رمز عبور">
+<button onclick="login()">ورود به پنل</button>
+<div id="loginMessage"></div>
 </section>
-<section class="card">
-<h2>فایل‌ها و مطالب</h2>
-<p>به‌زودی فایل‌های آموزشی در این قسمت قرار می‌گیرند.</p>
+
+<section id="dashboard" class="hidden">
+
+<div class="card">
+<h2>داشبورد مدیریت</h2>
+<p>به پنل مدیریت Mohammad 0 خوش آمدید.</p>
+<button class="danger" onclick="logout()">خروج از حساب</button>
+</div>
+
+<div class="grid">
+<div class="stat">رشته‌ها<strong id="departmentCount">0</strong></div>
+<div class="stat">ترم‌ها<strong id="termCount">0</strong></div>
+<div class="stat">درس‌ها<strong id="courseCount">0</strong></div>
+</div>
+
+<div class="card">
+
+<div class="nav">
+<button onclick="showPage('departments')">مدیریت رشته‌ها</button>
+<button onclick="showPage('terms')">مدیریت ترم‌ها</button>
+<button onclick="showPage('courses')">مدیریت درس‌ها</button>
+<button onclick="showPage('home')">داشبورد</button>
+</div>
+
+<div id="message" class="hidden"></div>
+
+<div id="homePage">
+<h2>مرکز مدیریت</h2>
+<p>از منوی بالا بخش مورد نظر را انتخاب کنید.</p>
+<p><small>امکانات دانشجو، استاد، آزمون و فایل‌ها در مراحل بعدی تکمیل می‌شوند.</small></p>
+</div>
+
+<div id="departmentsPage" class="hidden">
+<h2>مدیریت رشته‌ها</h2>
+<form onsubmit="addDepartment(event)">
+<input id="departmentName" placeholder="نام رشته یا دانشکده" required>
+<input id="departmentSlug" placeholder="شناسه انگلیسی (اختیاری)">
+<button type="submit">افزودن رشته</button>
+</form>
+<div id="departmentsList"></div>
+</div>
+
+<div id="termsPage" class="hidden">
+<h2>مدیریت ترم‌ها</h2>
+<form onsubmit="addTerm(event)">
+<input id="termTitle" placeholder="عنوان ترم، مثال: نیمسال اول" required>
+<input id="termYear" placeholder="سال تحصیلی، مثال: ۱۴۰۵-۱۴۰۶">
+<select id="termNumber">
+<option value="1">ترم اول</option>
+<option value="2">ترم دوم</option>
+<option value="3">ترم تابستان</option>
+</select>
+<button type="submit">افزودن ترم</button>
+</form>
+<div id="termsList"></div>
+</div>
+
+<div id="coursesPage" class="hidden">
+<h2>مدیریت درس‌ها</h2>
+<form onsubmit="addCourse(event)">
+<input id="courseTitle" placeholder="نام درس" required>
+<input id="courseCode" placeholder="کد درس">
+<input id="courseCredits" type="number" min="0" placeholder="تعداد واحد">
+<select id="courseDepartment">
+<option value="">انتخاب رشته</option>
+</select>
+<select id="courseTerm">
+<option value="">انتخاب ترم</option>
+</select>
+<textarea id="courseDescription" placeholder="توضیحات درس"></textarea>
+<button type="submit">افزودن درس</button>
+</form>
+<div id="coursesList"></div>
+</div>
+
+</div>
 </section>
-</main>
-<footer>© Mohammad 0</footer>
+</div>
+
+<footer>© Mohammad 0 | سامانه آموزشی</footer>
+
+<script>
+
+// اتصال به Supabase
+
+const SUPABASE_URL =
+"https://yggcstgfpikrwpmbjowg.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_2keGiGVeIm5_VVS3zfyq5A_5masdz2d";
+
+const db = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+let departments=[];
+let terms=[];
+let courses=[];
+
+function message(text,error=false){
+const el=document.getElementById("message");
+el.textContent=text;
+el.style.color=error?"#ff9aa9":"#9ce8b4";
+el.classList.remove("hidden");
+}
+
+function escapeHTML(value){
+return String(value??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",
+'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+async function login(){
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+const box=document.getElementById("loginMessage");
+
+if(!email||!password){
+box.textContent="ایمیل و رمز عبور را وارد کنید.";
+return;
+}
+
+box.textContent="در حال بررسی...";
+
+const {error}=await db.auth.signInWithPassword({email,password});
+
+if(error){
+box.textContent="ورود ناموفق: "+error.message;
+return;
+}
+
+await checkAdmin();
+}
+
+async function checkAdmin(){
+const {data,error}=await db.rpc("is_mohammad0_admin");
+
+if(error||data!==true){
+await db.auth.signOut();
+document.getElementById("loginMessage").textContent=
+"این حساب دسترسی مدیریت ندارد.";
+return;
+}
+
+document.getElementById("login").classList.add("hidden");
+document.getElementById("dashboard").classList.remove("hidden");
+
+await loadAll();
+}
+
+async function logout(){
+await db.auth.signOut();
+location.reload();
+}
+
+function showPage(name){
+["home","departments","terms","courses"].forEach(p=>{
+document.getElementById(p+"Page").classList.toggle("hidden",p!==name);
+});
+document.getElementById("message").classList.add("hidden");
+}
+
+async function loadAll(){
+const results=await Promise.all([
+db.from("edu_departments").select("*").order("id"),
+db.from("edu_terms").select("*").order("id"),
+db.from("edu_courses").select("*").order("id")
+]);
+
+if(results.some(r=>r.error)){
+message("خطا در دریافت اطلاعات: "+results.find(r=>r.error).error.message,true);
+return;
+}
+
+departments=results[0].data;
+terms=results[1].data;
+courses=results[2].data;
+
+document.getElementById("departmentCount").textContent=departments.length;
+document.getElementById("termCount").textContent=terms.length;
+document.getElementById("courseCount").textContent=courses.length;
+
+renderDepartments();
+renderTerms();
+renderCourses();
+updateSelects();
+}
+
+function renderDepartments(){
+document.getElementById("departmentsList").innerHTML=
+departments.map(d=>`
+<div class="item">
+<span>${escapeHTML(d.name)}</span>
+<button class="danger" onclick="deleteItem('edu_departments',${Number(d.id)})">حذف</button>
+</div>`).join("")||"<p>هنوز رشته‌ای ثبت نشده است.</p>";
+}
+
+function renderTerms(){
+document.getElementById("termsList").innerHTML=
+terms.map(t=>`
+<div class="item">
+<span>${escapeHTML(t.title)} - ${escapeHTML(t.academic_year||"")}</span>
+<button class="danger" onclick="deleteItem('edu_terms',${Number(t.id)})">حذف</button>
+</div>`).join("")||"<p>هنوز ترمی ثبت نشده است.</p>";
+}
+
+function renderCourses(){
+document.getElementById("coursesList").innerHTML=
+courses.map(c=>`
+<div class="item">
+<span>${escapeHTML(c.title)} (${escapeHTML(c.credits)} واحد)</span>
+<button class="danger" onclick="deleteItem('edu_courses',${Number(c.id)})">حذف</button>
+</div>`).join("")||"<p>هنوز درسی ثبت نشده است.</p>";
+}
+
+function updateSelects(){
+document.getElementById("courseDepartment").innerHTML=
+'<option value="">انتخاب رشته</option>'+
+departments.map(d=>`<option value="${Number(d.id)}">${escapeHTML(d.name)}</option>`).join("");
+
+document.getElementById("courseTerm").innerHTML=
+'<option value="">انتخاب ترم</option>'+
+terms.map(t=>`<option value="${Number(t.id)}">${escapeHTML(t.title)}</option>`).join("");
+}
+
+async function addDepartment(e){
+e.preventDefault();
+
+const name=document.getElementById("departmentName").value.trim();
+const slug=document.getElementById("departmentSlug").value.trim();
+
+const {error}=await db.from("edu_departments").insert({
+name,slug:slug||null
+});
+
+if(error){message(error.message,true);return;}
+
+e.target.reset();
+message("رشته با موفقیت ثبت شد.");
+await loadAll();
+}
+
+async function addTerm(e){
+e.preventDefault();
+
+const title=document.getElementById("termTitle").value.trim();
+const academic_year=document.getElementById("termYear").value.trim();
+const term_number=Number(document.getElementById("termNumber").value);
+
+const {error}=await db.from("edu_terms").insert({
+title,academic_year,term_number
+});
+
+if(error){message(error.message,true);return;}
+
+e.target.reset();
+message("ترم با موفقیت ثبت شد.");
+await loadAll();
+}
+
+async function addCourse(e){
+e.preventDefault();
+
+const title=document.getElementById("courseTitle").value.trim();
+const course_code=document.getElementById("courseCode").value.trim();
+const credits=Number(document.getElementById("courseCredits").value||0);
+const department_id=document.getElementById("courseDepartment").value;
+const term_id=document.getElementById("courseTerm").value;
+const description=document.getElementById("courseDescription").value.trim();
+
+const {error}=await db.from("edu_courses").insert({
+title,
+course_code:course_code||null,
+credits,
+department_id:department_id?Number(department_id):null,
+term_id:term_id?Number(term_id):null,
+description:description||null
+});
+
+if(error){message(error.message,true);return;}
+
+e.target.reset();
+message("درس با موفقیت ثبت شد.");
+await loadAll();
+}
+
+async function deleteItem(table,id){
+if(!confirm("آیا از حذف این مورد مطمئن هستید؟"))return;
+
+const {error}=await db.from(table).delete().eq("id",id);
+
+if(error){
+message("حذف انجام نشد: "+error.message,true);
+return;
+}
+
+message("حذف با موفقیت انجام شد.");
+await loadAll();
+}
+
+async function start(){
+const {data,error}=await db.auth.getSession();
+if(error)return;
+if(data.session)await checkAdmin();
+}
+
+start();
+
+</script>
 </body>
 </html>
